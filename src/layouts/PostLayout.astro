@@ -1,0 +1,157 @@
+---
+import 'katex/dist/katex.min.css';
+import type { MarkdownHeading } from 'astro';
+import CiteBox from '../components/CiteBox.astro';
+import Comments from '../components/Comments.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Reactions from '../components/Reactions.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import { SITE } from '../config';
+import { type Post, postUrl, tagUrl } from '../utils/posts';
+import { url } from '../utils/url';
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  post: Post;
+  headings: MarkdownHeading[];
+  newer?: Post;
+  older?: Post;
+}
+
+const { post, headings, newer, older } = Astro.props;
+const { title, description, date, updated, tags, draft } = post.data;
+const permalink = new URL(postUrl(post), Astro.site).href;
+const toc = headings.filter((heading) => heading.depth <= 3 && heading.slug !== 'footnote-label');
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description,
+  datePublished: date.toISOString(),
+  dateModified: (updated ?? date).toISOString(),
+  author: { '@type': 'Person', name: SITE.author, url: new URL(url('/'), Astro.site).href },
+  mainEntityOfPage: permalink,
+  keywords: tags.join(', '),
+};
+---
+
+<BaseLayout title={title} description={description} type="article" published={date} modified={updated} jsonLd={jsonLd}>
+  <article>
+    <header class="post-header">
+      {draft && <p class="draft-note">Draft: visible only on your computer</p>}
+      <h1>{title}</h1>
+      <p class="post-description">{description}</p>
+      <p class="post-meta">
+        <FormattedDate date={date} month="long" />
+        {updated && <span>Updated <FormattedDate date={updated} month="long" /></span>}
+      </p>
+      {
+        tags.length > 0 && (
+          <p class="post-tags">
+            {tags.map((tag) => (
+              <a class="tag" href={tagUrl(tag)}>#{tag}</a>
+            ))}
+          </p>
+        )
+      }
+    </header>
+
+    <div class="post-body">
+      {
+        toc.length > 1 && (
+          <>
+            <aside class="toc-sidebar">
+              <TableOfContents headings={toc} />
+            </aside>
+            <details class="toc-inline">
+              <summary>Contents</summary>
+              <TableOfContents headings={toc} />
+            </details>
+          </>
+        )
+      }
+      <div class="prose">
+        <slot />
+      </div>
+    </div>
+
+    <Reactions slug={post.id} />
+
+    {SITE.citations && <CiteBox title={title} date={date} permalink={permalink} />}
+
+    {
+      (newer || older) && (
+        <nav class="post-nav" aria-label="More posts">
+          {newer && (
+            <a class="newer" href={postUrl(newer)}>
+              <span class="label">← Newer</span>
+              {newer.data.title}
+            </a>
+          )}
+          {older && (
+            <a class="older" href={postUrl(older)}>
+              <span class="label">Older →</span>
+              {older.data.title}
+            </a>
+          )}
+        </nav>
+      )
+    }
+  </article>
+
+  <Comments slug={post.id} />
+</BaseLayout>
+
+<script>
+  // Add a copy button to every code block.
+  for (const pre of document.querySelectorAll<HTMLPreElement>('.prose pre, .cite pre')) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block';
+    pre.before(wrapper);
+    wrapper.append(pre);
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'copy-button';
+    button.textContent = 'Copy';
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(pre.innerText);
+        button.textContent = 'Copied';
+      } catch {
+        button.textContent = 'Copy failed';
+      }
+      setTimeout(() => (button.textContent = 'Copy'), 1500);
+    });
+    wrapper.append(button);
+  }
+
+  // Highlight the section being read in the sidebar table of contents.
+  const sections = [...document.querySelectorAll<HTMLAnchorElement>('.toc-sidebar a')]
+    .map((link) => ({ link, heading: document.getElementById(decodeURIComponent(link.hash.slice(1))) }))
+    .filter((section): section is { link: HTMLAnchorElement; heading: HTMLElement } => section.heading !== null);
+
+  if (sections.length > 0) {
+    let scheduled = false;
+    const highlight = () => {
+      scheduled = false;
+      let current = sections[0];
+      for (const section of sections) {
+        if (section.heading.getBoundingClientRect().top > 120) break;
+        current = section;
+      }
+      for (const section of sections) section.link.classList.toggle('active', section === current);
+    };
+    addEventListener(
+      'scroll',
+      () => {
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(highlight);
+      },
+      { passive: true },
+    );
+    highlight();
+  }
+</script>

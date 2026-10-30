@@ -1,0 +1,84 @@
+---
+// Like, Love, Amazing, Dislike: one reaction per reader per post, no sign-in needed.
+// The bar stays hidden until the counts load, so readers never see buttons that don't work.
+import { REACTIONS } from '../reactions';
+import { url } from '../utils/url';
+
+interface Props {
+  /** The post's slug, which the counts are stored under. */
+  slug: string;
+}
+
+const { slug } = Astro.props;
+---
+
+<section class="reactions" data-post={slug} data-endpoint={url('/api/reactions/')} aria-labelledby="reactions-heading" hidden>
+  <h2 id="reactions-heading">React to this post</h2>
+  <div class="reaction-buttons">
+    {
+      REACTIONS.map(({ id, emoji, label }) => (
+        <button type="button" class="reaction" data-reaction={id} aria-pressed="false">
+          <span class="reaction-emoji" aria-hidden="true">
+            {emoji}
+          </span>
+          {label}
+          <span class="reaction-count">0</span>
+        </button>
+      ))
+    }
+  </div>
+</section>
+
+<script>
+  import { readerId } from '../scripts/reader';
+
+  interface State {
+    counts: Record<string, number>;
+    mine: string | null;
+  }
+
+  const section = document.querySelector<HTMLElement>('.reactions');
+
+  if (section) {
+    const { post = '', endpoint = '' } = section.dataset;
+    const buttons = [...section.querySelectorAll<HTMLButtonElement>('.reaction')];
+
+    const visitor = readerId();
+
+    let mine: string | null = null;
+    const show = (state: State) => {
+      mine = state.mine;
+      for (const button of buttons) {
+        const id = button.dataset.reaction ?? '';
+        button.setAttribute('aria-pressed', String(mine === id));
+        button.querySelector('.reaction-count')!.textContent = String(state.counts[id] ?? 0);
+      }
+      section.hidden = false;
+    };
+
+    fetch(`${endpoint}?post=${encodeURIComponent(post)}&visitor=${encodeURIComponent(visitor)}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
+      .then(show)
+      .catch(() => {}); // Reactions unavailable: leave the bar hidden.
+
+    let busy = false;
+    for (const button of buttons) {
+      button.addEventListener('click', async () => {
+        if (busy) return;
+        busy = true;
+        // Clicking your current reaction again removes it.
+        const reaction = mine === button.dataset.reaction ? null : button.dataset.reaction;
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ post, visitor, reaction }),
+          });
+          if (response.ok) show(await response.json());
+        } finally {
+          busy = false;
+        }
+      });
+    }
+  }
+</script>

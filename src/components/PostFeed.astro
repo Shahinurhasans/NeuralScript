@@ -1,0 +1,39 @@
+---
+// Posts as a front-page feed: the title, the date, and the opening words of each post.
+import 'katex/dist/katex.min.css';
+import { excerpt } from '../utils/excerpt';
+import { type Post, postUrl } from '../utils/posts';
+import FormattedDate from './FormattedDate.astro';
+
+interface Props {
+  posts: Post[];
+}
+
+const { posts } = Astro.props;
+const items = await Promise.all(posts.map(async (post) => ({ post, ...(await excerpt(post.body)) })));
+---
+
+<ol class="feed">
+  {
+    items.map(({ post, html, truncated }) => (
+      <li class="feed-item">
+        <article>
+          <h2 class="feed-title">
+            <a href={postUrl(post)}>{post.data.title}</a>
+            {post.data.draft && <span class="badge">Draft</span>}
+          </h2>
+          <p class="feed-date">
+            <FormattedDate date={post.data.date} month="long" />
+          </p>
+          <p class="feed-excerpt">
+            <Fragment set:html={html} />
+            {truncated ? ' … ' : ' '}
+            <a href={postUrl(post)}>
+              Continue reading<span class="sr-only"> “{post.data.title}”</span>
+            </a>
+          </p>
+        </article>
+      </li>
+    ))
+  }
+</ol>

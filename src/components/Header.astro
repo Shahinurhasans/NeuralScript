@@ -1,0 +1,42 @@
+---
+// The masthead (blog name and description) above a centered menu.
+import { SITE } from '../config';
+import { url } from '../utils/url';
+import ThemeToggle from './ThemeToggle.astro';
+
+const links = [
+  { label: 'Posts', href: url('/posts/'), sections: [url('/posts/')] },
+  { label: 'Archives', href: url('/archives/'), sections: [url('/archives/')] },
+  { label: 'Tags', href: url('/tags/'), sections: [url('/tags/')] },
+];
+if (SITE.cv) links.push({ label: 'CV', href: SITE.cv.startsWith('/') ? url(SITE.cv) : SITE.cv, sections: [] });
+if (SITE.about) links.push({ label: 'About', href: url('/about/'), sections: [url('/about/')] });
+
+const path = Astro.url.pathname.replace(/\/?$/, '/');
+const isHome = path === url('/');
+const current = (href: string, sections: string[]) =>
+  path === href ? 'page' : sections.some((section) => path.startsWith(section)) ? 'true' : undefined;
+---
+
+<header class="site-header">
+  <div class="container">
+    <div class="masthead">
+      {isHome ? <h1 class="site-title">{SITE.title}</h1> : <a class="site-title" href={url('/')}>{SITE.title}</a>}
+      <p class="site-tagline">{SITE.description}</p>
+    </div>
+    <nav aria-label="Main">
+      <ul>
+        {
+          links.map(({ label, href, sections }) => (
+            <li>
+              <a href={href} aria-current={current(href, sections)}>
+                {label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <ThemeToggle />
+    </nav>
+  </div>
+</header>

@@ -1,0 +1,41 @@
+---
+// "Cite this post": an APA-style reference and a BibTeX entry built from the post's metadata.
+import { SITE } from '../config';
+
+interface Props {
+  title: string;
+  date: Date;
+  permalink: string;
+}
+
+const { title, date, permalink } = Astro.props;
+
+const STOP_WORDS = new Set(['about', 'after', 'from', 'have', 'into', 'over', 'that', 'than', 'their', 'there', 'they', 'this', 'what', 'when', 'where', 'which', 'while', 'with', 'your']);
+
+const [surname, givenNames = ''] = SITE.authorBib.split(',').map((part) => part.trim());
+const year = date.getUTCFullYear();
+const month = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }).toLowerCase();
+const monthDay = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' });
+const keyword = title.toLowerCase().match(/[a-z0-9]+/g)?.find((word) => word.length > 3 && !STOP_WORDS.has(word)) ?? 'post';
+const key = `${surname.toLowerCase().replace(/[^a-z]/g, '') || 'author'}${year}${keyword}`;
+const initials = givenNames.split(/[\s.]+/).filter(Boolean).map((name) => `${name[0]}.`).join(' ');
+const apaAuthor = initials ? `${surname}, ${initials}` : surname;
+const tex = (text: string) => text.replace(/[&%$#_]/g, '\\$&');
+
+const bibtex = `@misc{${key},
+  author       = {${SITE.authorBib}},
+  title        = {${tex(title)}},
+  year         = {${year}},
+  month        = ${month},
+  howpublished = {\\url{${permalink}}},
+  note         = {Blog post}
+}`;
+---
+
+<section class="cite" aria-labelledby="cite-heading">
+  <h2 id="cite-heading">Cite this post</h2>
+  <p class="cite-apa">
+    {apaAuthor} ({year}, {monthDay}). <cite>{title}</cite>. {SITE.title}. <a href={permalink}>{permalink}</a>
+  </p>
+  <pre><code>{bibtex}</code></pre>
+</section>

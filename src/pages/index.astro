@@ -1,0 +1,32 @@
+---
+import PostFeed from '../components/PostFeed.astro';
+import { SITE } from '../config';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getPosts } from '../utils/posts';
+import { url } from '../utils/url';
+
+const LATEST = 10;
+const posts = await getPosts();
+const latest = posts.slice(0, LATEST);
+
+const sameAs = Object.values(SITE.links).filter((link) => link.startsWith('http'));
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: SITE.title,
+  description: SITE.description,
+  url: new URL(url('/'), Astro.site).href,
+  author: { '@type': 'Person', name: SITE.author, ...(sameAs.length > 0 && { sameAs }) },
+};
+---
+
+<BaseLayout jsonLd={jsonLd}>
+  {posts.length > 0 ? <PostFeed posts={latest} /> : <p class="feed-empty">The first post is on its way.</p>}
+  {
+    posts.length > latest.length && (
+      <p class="more">
+        <a href={url('/posts/')}>Older posts →</a>
+      </p>
+    )
+  }
+</BaseLayout>

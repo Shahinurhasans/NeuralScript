@@ -1,0 +1,14 @@
+---
+import { SITE } from '../config';
+
+interface Props {
+  date: Date;
+  month?: 'long' | 'short';
+}
+
+const { date, month = 'short' } = Astro.props;
+// Dates in front matter are read as midnight UTC, so format them in UTC to avoid off-by-one days.
+const label = date.toLocaleDateString(SITE.locale, { year: 'numeric', month, day: 'numeric', timeZone: 'UTC' });
+---
+
+<time datetime={date.toISOString().slice(0, 10)}>{label}</time>

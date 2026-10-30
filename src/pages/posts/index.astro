@@ -1,0 +1,22 @@
+---
+import PostFeed from '../../components/PostFeed.astro';
+import { SITE } from '../../config';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPosts } from '../../utils/posts';
+import { url } from '../../utils/url';
+
+const posts = await getPosts();
+---
+
+<BaseLayout title="Posts" description={`Every post on ${SITE.title}.`}>
+  <header class="page-header">
+    <h1>Posts</h1>
+    <p class="page-links">
+      <a href={url('/archives/')}>Archives</a>
+      <a href={url('/tags/')}>Browse by tag</a>
+      <a href={url('/rss.xml')}>RSS feed</a>
+    </p>
+  </header>
+
+  {posts.length > 0 ? <PostFeed posts={posts} /> : <p class="feed-empty">The first post is on its way.</p>}
+</BaseLayout>

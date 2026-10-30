@@ -1,0 +1,15 @@
+---
+import { SITE } from '../config';
+import ProfileLinks from './ProfileLinks.astro';
+import VisitorCount from './VisitorCount.astro';
+---
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-meta">
+      <p>© {new Date().getFullYear()} {SITE.author}</p>
+      <VisitorCount />
+    </div>
+    <ProfileLinks rss />
+  </div>
+</footer>

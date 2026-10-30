@@ -1,0 +1,172 @@
+---
+// The site owner's page. Sign in with the ADMIN_TOKEN password to see visitor numbers and the
+// latest comments, delete unwanted comments, and reply as the author on any post.
+import { SITE } from '../../config';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { url } from '../../utils/url';
+---
+
+<BaseLayout title="Admin" description="Sign in to manage comments." noindex>
+  <section
+    class="admin"
+    data-comments={url('/api/comments/')}
+    data-visitors={url('/api/visitors/')}
+    data-posts={url('/posts/')}
+    data-locale={SITE.locale}
+  >
+    <header class="page-header">
+      <h1>Admin</h1>
+      <p class="lede">For the site owner: visitor numbers and comments.</p>
+    </header>
+
+    <form class="admin-login">
+      <label class="field">
+        <span>Admin password</span>
+        <input type="password" name="password" autocomplete="current-password" required />
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="button">Sign in</button>
+        <span class="form-status" role="status"></span>
+      </div>
+    </form>
+
+    <div class="admin-panel" hidden>
+      <p class="admin-note">
+        You're signed in on this browser. On any post you can now reply as the author and delete comments, and
+        your own visits aren't counted.
+        <button type="button" class="text-button sign-out">Sign out</button>
+      </p>
+
+      <h2 class="section-label">Visitors</h2>
+      <p class="admin-stats">
+        <strong class="stat-visits">0</strong> visits · <strong class="stat-visitors">0</strong> unique visitors ·
+        <strong class="stat-views">0</strong> page views
+      </p>
+
+      <h2 class="section-label">Latest comments</h2>
+      <p class="comments-empty" hidden>No comments yet.</p>
+      <ol class="comment-list admin-list"></ol>
+
+      <template class="admin-template">
+        <li class="comment">
+          <div class="comment-meta">
+            <span class="comment-name"></span>
+            <span class="author-badge" hidden>Author</span>
+            <time class="comment-date"></time>
+            <span class="comment-where">on <a class="comment-post"></a></span>
+          </div>
+          <p class="comment-body"></p>
+          <div class="comment-actions">
+            <a class="text-button comment-open">Reply on the post</a>
+            <button type="button" class="text-button delete-button">Delete</button>
+          </div>
+        </li>
+      </template>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { adminToken, saveAdminToken } from '../../scripts/reader';
+
+  interface Comment {
+    id: string;
+    parentId: string | null;
+    name: string;
+    body: string;
+    createdAt: string;
+    author: boolean;
+    post: string;
+  }
+
+  const admin = document.querySelector<HTMLElement>('.admin')!;
+  const { comments: commentsApi = '', visitors: visitorsApi = '', posts = '', locale = 'en-US' } = admin.dataset;
+  const login = admin.querySelector<HTMLFormElement>('.admin-login')!;
+  const status = login.querySelector<HTMLElement>('.form-status')!;
+  const panel = admin.querySelector<HTMLElement>('.admin-panel')!;
+  const list = admin.querySelector<HTMLOListElement>('.admin-list')!;
+  const empty = admin.querySelector<HTMLElement>('.comments-empty')!;
+  const template = admin.querySelector<HTMLTemplateElement>('.admin-template')!;
+
+  const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
+
+  /** Loads the dashboard. Resolves to false when the password is wrong. */
+  async function open(token: string): Promise<boolean> {
+    const response = await fetch(`${commentsApi}?recent`, { headers: auth(token) });
+    if (response.status === 401) return false;
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const { comments } = (await response.json()) as { comments: Comment[] };
+    list.replaceChildren(...comments.map((comment) => item(comment, token)));
+    empty.hidden = comments.length > 0;
+
+    const stats = await fetch(visitorsApi)
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null);
+    if (stats) {
+      admin.querySelector('.stat-visits')!.textContent = stats.visits.toLocaleString(locale);
+      admin.querySelector('.stat-visitors')!.textContent = stats.visitors.toLocaleString(locale);
+      admin.querySelector('.stat-views')!.textContent = stats.views.toLocaleString(locale);
+    }
+    login.hidden = true;
+    panel.hidden = false;
+    return true;
+  }
+
+  function item(comment: Comment, token: string): HTMLLIElement {
+    const li = template.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
+    const link = `${posts}${comment.post}/#comment-${comment.id}`;
+    li.querySelector('.comment-name')!.textContent = comment.name;
+    li.querySelector<HTMLElement>('.author-badge')!.hidden = !comment.author;
+    const date = li.querySelector('time')!;
+    date.dateTime = comment.createdAt;
+    date.textContent = new Date(comment.createdAt).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
+    const postLink = li.querySelector<HTMLAnchorElement>('.comment-post')!;
+    postLink.href = link;
+    postLink.textContent = comment.post;
+    li.querySelector('.comment-body')!.textContent = comment.body;
+    li.querySelector<HTMLAnchorElement>('.comment-open')!.href = link;
+    li.querySelector('.delete-button')!.addEventListener('click', async () => {
+      const what = comment.parentId ? 'this reply' : 'this comment and its replies';
+      if (!confirm(`Delete ${what}?`)) return;
+      const response = await fetch(
+        `${commentsApi}?post=${encodeURIComponent(comment.post)}&id=${encodeURIComponent(comment.id)}`,
+        { method: 'DELETE', headers: auth(token) },
+      );
+      if (response.ok) await open(token);
+      else alert('Could not delete the comment. Please try again.');
+    });
+    return li;
+  }
+
+  login.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const password = String(new FormData(login).get('password') ?? '').trim();
+    status.textContent = 'Checking…';
+    try {
+      if (await open(password)) {
+        saveAdminToken(password);
+        status.textContent = '';
+      } else {
+        status.textContent = 'Wrong password.';
+      }
+    } catch {
+      status.textContent = 'Could not reach the server. Please try again.';
+    }
+  });
+
+  admin.querySelector('.sign-out')!.addEventListener('click', () => {
+    saveAdminToken(null);
+    login.reset();
+    panel.hidden = true;
+    login.hidden = false;
+  });
+
+  const saved = adminToken();
+  if (saved) {
+    open(saved)
+      .then((ok) => {
+        if (!ok) saveAdminToken(null);
+      })
+      .catch(() => {});
+  }
+</script>

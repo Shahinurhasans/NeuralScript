@@ -1,0 +1,52 @@
+---
+// "1,234 visitors" in the footer: each time someone opens the site in a new browser tab counts once.
+// Refreshing or moving between pages in the same tab doesn't count again. Your own visits don't
+// count while you are signed in at /admin/, and nothing is counted while running the site locally.
+import { SITE } from '../config';
+import { url } from '../utils/url';
+---
+
+<p class="visitor-count" data-endpoint={url('/api/visitors/')} data-locale={SITE.locale} hidden></p>
+
+<script>
+  import { adminToken, readerId } from '../scripts/reader';
+
+  const counter = document.querySelector<HTMLElement>('.visitor-count');
+
+  // Session storage lasts as long as the browser tab: it survives a refresh, not closing the tab.
+  const COUNTED = 'visit-counted';
+  const counted = () => {
+    try {
+      return sessionStorage.getItem(COUNTED) === '1';
+    } catch {
+      return false;
+    }
+  };
+  const markCounted = () => {
+    try {
+      sessionStorage.setItem(COUNTED, '1');
+    } catch {}
+  };
+
+  if (counter) {
+    const { endpoint = '', locale = 'en-US' } = counter.dataset;
+    const counts = !import.meta.env.DEV && !adminToken();
+    const newVisit = counts && !counted();
+    const request = counts
+      ? fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ visitor: readerId(), newVisit }),
+        })
+      : fetch(endpoint);
+
+    request
+      .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
+      .then(({ visits }: { visits: number }) => {
+        if (newVisit) markCounted();
+        counter.textContent = `${visits.toLocaleString(locale)} ${visits === 1 ? 'visitor' : 'visitors'}`;
+        counter.hidden = false;
+      })
+      .catch(() => {}); // Counter unavailable: leave it hidden.
+  }
+</script>

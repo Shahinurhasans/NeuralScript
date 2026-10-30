@@ -1,0 +1,256 @@
+---
+// "Questions and answers" under each post. Anyone can comment and reply without an account.
+// The site owner signs in at /admin/ to reply as the author and to delete comments.
+import { SITE } from '../config';
+import { url } from '../utils/url';
+
+interface Props {
+  /** The post's slug, which its comments are stored under. */
+  slug: string;
+}
+
+const { slug } = Astro.props;
+---
+
+{
+  SITE.comments && (
+    <section
+      class="comments"
+      data-post={slug}
+      data-endpoint={url('/api/comments/')}
+      data-author={SITE.author}
+      data-locale={SITE.locale}
+      aria-labelledby="comments-heading"
+      hidden
+    >
+      <h2 id="comments-heading">Questions and answers</h2>
+
+      <form class="comment-form">
+        <label class="field name-field">
+          <span>Name (optional)</span>
+          <input name="name" maxlength="60" autocomplete="name" placeholder="Anonymous" />
+        </label>
+        <label class="field">
+          <span>Comment</span>
+          <textarea name="body" rows="4" maxlength="3000" required />
+        </label>
+        <label class="form-trap" aria-hidden="true">
+          Leave this empty
+          <input name="website" tabindex="-1" autocomplete="off" />
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="button">Post comment</button>
+          <span class="form-status" role="status" />
+        </div>
+      </form>
+
+      <p class="comments-empty" hidden>No comments yet. Be the first to ask a question.</p>
+      <ol class="comment-list" />
+
+      <template class="comment-template">
+        <li class="comment">
+          <div class="comment-meta">
+            <span class="comment-name" />
+            <span class="author-badge" hidden>Author</span>
+            <time class="comment-date" />
+          </div>
+          <p class="comment-body" />
+          <div class="comment-actions">
+            <button type="button" class="text-button reply-button">Reply</button>
+            <button type="button" class="text-button delete-button">Delete</button>
+          </div>
+          <ol class="replies" />
+        </li>
+      </template>
+    </section>
+  )
+}
+
+<script>
+  import { adminToken } from '../scripts/reader';
+
+  interface Comment {
+    id: string;
+    parentId: string | null;
+    name: string;
+    body: string;
+    createdAt: string;
+    author: boolean;
+  }
+
+  const section = document.querySelector<HTMLElement>('.comments[data-post]');
+
+  if (section) {
+    const { post = '', endpoint = '', author = '', locale = 'en-US' } = section.dataset;
+    const list = section.querySelector<HTMLOListElement>('.comment-list')!;
+    const empty = section.querySelector<HTMLElement>('.comments-empty')!;
+    const mainForm = section.querySelector<HTMLFormElement>('.comment-form')!;
+    const template = section.querySelector<HTMLTemplateElement>('.comment-template')!;
+    const token = adminToken();
+    let comments: Comment[] = [];
+
+    const headers = (): HeadersInit => ({
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    });
+
+    // Remember the reader's name for their next comment.
+    const savedName = () => {
+      try {
+        return localStorage.getItem('comment-name') ?? '';
+      } catch {
+        return '';
+      }
+    };
+    const saveName = (name: string) => {
+      try {
+        localStorage.setItem('comment-name', name);
+      } catch {}
+    };
+
+    const updateEmpty = () => {
+      empty.hidden = comments.some((comment) => !comment.parentId);
+    };
+
+    /** The element for one comment. Comments are shown as plain text, never as HTML. */
+    function build(comment: Comment): HTMLLIElement {
+      const item = template.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
+      item.id = `comment-${comment.id}`;
+      item.querySelector('.comment-name')!.textContent = comment.name;
+      item.querySelector<HTMLElement>('.author-badge')!.hidden = !comment.author;
+      const date = item.querySelector('time')!;
+      date.dateTime = comment.createdAt;
+      date.textContent = new Date(comment.createdAt).toLocaleDateString(locale, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+      item.querySelector('.comment-body')!.textContent = comment.body;
+
+      const reply = item.querySelector<HTMLButtonElement>('.reply-button')!;
+      const remove = item.querySelector<HTMLButtonElement>('.delete-button')!;
+      if (comment.parentId) {
+        reply.remove();
+        item.querySelector('.replies')!.remove();
+      } else {
+        reply.addEventListener('click', () => openReply(item, comment.id));
+      }
+      if (token) remove.addEventListener('click', () => deleteComment(comment));
+      else remove.remove();
+      return item;
+    }
+
+    /** Adds a comment to the page: replies go under the comment they answer. */
+    function show(comment: Comment) {
+      const thread = comment.parentId ? document.getElementById(`comment-${comment.parentId}`) : null;
+      (thread?.querySelector('.replies') ?? list).append(build(comment));
+    }
+
+    /** Wires up a comment form. `parentId` is set for reply forms. */
+    function setUp(form: HTMLFormElement, parentId: string | null) {
+      const nameInput = form.querySelector<HTMLInputElement>('input[name="name"]');
+      const status = form.querySelector<HTMLElement>('.form-status')!;
+      const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+
+      if (token) {
+        form.querySelector('.name-field')?.remove();
+        status.textContent = `Posting as ${author}, the author`;
+      } else {
+        if (nameInput) nameInput.value = savedName();
+        status.textContent = '';
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const data = new FormData(form);
+        button.disabled = true;
+        status.textContent = 'Posting…';
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: headers(),
+            body: JSON.stringify({
+              post,
+              parentId,
+              name: data.get('name') ?? '',
+              body: data.get('body'),
+              website: data.get('website'),
+            }),
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            status.textContent = result.error ?? 'Something went wrong. Please try again.';
+            return;
+          }
+          if (!token) saveName(String(data.get('name') ?? ''));
+          if (result.comment) {
+            comments.push(result.comment);
+            show(result.comment);
+            updateEmpty();
+          }
+          if (parentId) {
+            form.remove();
+          } else {
+            form.reset();
+            if (nameInput && !token) nameInput.value = savedName();
+            status.textContent = 'Thanks! Your comment is posted.';
+          }
+        } catch {
+          status.textContent = 'Could not reach the server. Please try again.';
+        } finally {
+          button.disabled = false;
+        }
+      });
+    }
+
+    function openReply(item: HTMLElement, parentId: string) {
+      const open = item.querySelector<HTMLFormElement>(':scope > .comment-form');
+      if (open) {
+        open.querySelector('textarea')?.focus();
+        return;
+      }
+      const form = mainForm.cloneNode(true) as HTMLFormElement;
+      form.classList.add('reply-form');
+      form.querySelector('textarea')!.value = '';
+      form.querySelector('button[type="submit"]')!.textContent = 'Post reply';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'text-button';
+      cancel.textContent = 'Cancel';
+      cancel.addEventListener('click', () => form.remove());
+      form.querySelector('.form-actions')!.append(cancel);
+      setUp(form, parentId);
+      item.querySelector(':scope > .replies')!.after(form);
+      form.querySelector('textarea')!.focus();
+    }
+
+    async function deleteComment(comment: Comment) {
+      const what = comment.parentId ? 'this reply' : 'this comment and its replies';
+      if (!confirm(`Delete ${what}?`)) return;
+      const response = await fetch(`${endpoint}?post=${encodeURIComponent(post)}&id=${encodeURIComponent(comment.id)}`, {
+        method: 'DELETE',
+        headers: headers(),
+      });
+      if (!response.ok) {
+        alert(response.status === 401 ? 'Your admin sign-in is no longer valid. Sign in again on the admin page.' : 'Could not delete the comment. Please try again.');
+        return;
+      }
+      comments = comments.filter((c) => c.id !== comment.id && c.parentId !== comment.id);
+      document.getElementById(`comment-${comment.id}`)?.remove();
+      updateEmpty();
+    }
+
+    fetch(`${endpoint}?post=${encodeURIComponent(post)}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
+      .then((data: { comments: Comment[] }) => {
+        comments = data.comments;
+        for (const comment of comments) if (!comment.parentId) show(comment);
+        for (const comment of comments) if (comment.parentId) show(comment);
+        updateEmpty();
+        setUp(mainForm, null);
+        section.hidden = false;
+        if (location.hash.startsWith('#comment-')) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+      })
+      .catch(() => {}); // Comments unavailable: keep the section hidden.
+  }
+</script>

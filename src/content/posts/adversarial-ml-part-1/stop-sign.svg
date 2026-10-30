@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300" width="640" height="300" role="img" aria-labelledby="t d">
+  <title id="t">Illustration of a physical stop-sign attack</title>
+  <desc id="d">A red stop sign with four small black and white rectangular stickers. An arrow leads to the classifier output, Speed Limit 45.</desc>
+  <!-- Octagonal stop sign centred at (150, 150) -->
+  <polygon points="104,40 196,40 260,104 260,196 196,260 104,260 40,196 40,104" fill="#c92a2a" stroke="#ffffff" stroke-width="6"/>
+  <polygon points="104,40 196,40 260,104 260,196 196,260 104,260 40,196 40,104" fill="none" stroke="#868e96" stroke-width="1"/>
+  <text x="150" y="168" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="700" fill="#ffffff">STOP</text>
+  <!-- Stickers -->
+  <rect x="88" y="86" width="40" height="13" fill="#111111"/>
+  <rect x="170" y="86" width="40" height="13" fill="#f1f3f5" stroke="#111111" stroke-width="1"/>
+  <rect x="88" y="196" width="40" height="13" fill="#f1f3f5" stroke="#111111" stroke-width="1"/>
+  <rect x="170" y="196" width="40" height="13" fill="#111111"/>
+  <!-- Classifier -->
+  <line x1="285" y1="150" x2="380" y2="150" stroke="#868e96" stroke-width="2"/>
+  <path d="M378 143 L392 150 L378 157 Z" fill="#868e96"/>
+  <rect x="400" y="105" width="210" height="90" rx="10" fill="none" stroke="#868e96" stroke-width="1.5"/>
+  <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" text-anchor="middle">
+    <text x="333" y="138" font-size="12" fill="#868e96">traffic-sign</text>
+    <text x="333" y="172" font-size="12" fill="#868e96">classifier</text>
+    <text x="505" y="138" font-size="13" fill="#868e96">Predicted class</text>
+    <text x="505" y="168" font-size="20" font-weight="600" fill="#e8590c">Speed Limit 45</text>
+    <text x="150" y="292" font-size="12" fill="#868e96">a real stop sign with four small stickers</text>
+  </g>
+</svg>

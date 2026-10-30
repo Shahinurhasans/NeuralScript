@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { url } from '../utils/url';
+---
+
+<BaseLayout title="Page not found">
+  <section class="not-found">
+    <p class="section-label">404</p>
+    <h1>Page not found</h1>
+    <p class="lede">The page you're looking for doesn't exist, or it has moved.</p>
+    <p class="page-links">
+      <a href={url('/')}>Home</a>
+      <a href={url('/posts/')}>All posts</a>
+    </p>
+  </section>
+</BaseLayout>
