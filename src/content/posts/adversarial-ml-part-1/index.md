@@ -1,5 +1,5 @@
 ---
-title: 'Can You Hack or Fool a ML or DL Model? An Introduction to Adversarial Attacks'
+title: 'Can You Hack or Fool a ML or DL Model? An Introduction to Adversarial Attacks?'
 description: 'Part 1 of a series on adversarial machine learning(AML): what adversarial attacks are, why a slightly modified input can make a model confidently wrong, and real-world attacks, explained without heavy mathematics.'
 date: 2026-10-31
 tags: [adversarial-ml, deep-learning, ml-security]
