@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 310" width="680" height="310" role="img" aria-labelledby="t d">
+  <title id="t">Engineering comparison between a Small Language Model and a Large Language Model</title>
+  <desc id="d">Side-by-side comparison across five engineering dimensions: parameter count (15 to 30M vs 10B to 100B+), 16-bit weight footprint (30 to 60 MB vs 20 to 200+ GB), training hardware (single laptop or GPU vs multi-node GPU cluster), experiment cycle (hours vs weeks to months), and deployment (local, offline, edge vs remote cloud API).</desc>
+  <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+    <text x="340" y="22" text-anchor="middle" font-size="13" font-weight="600" fill="#868e96">Illustrative engineering comparison: compact domain SLM vs. frontier general-purpose LLM</text>
+
+    <!-- Legend -->
+    <g transform="translate(175 36)">
+      <rect x="0" y="0" width="14" height="14" rx="3" fill="#2f9e44" fill-opacity="0.25" stroke="#2f9e44" stroke-width="1.5"/>
+      <text x="20" y="11.5" font-size="12" font-weight="700" fill="#2f9e44">Our SLM (TinyStories)</text>
+
+      <rect x="180" y="0" width="14" height="14" rx="3" fill="#e8590c" fill-opacity="0.22" stroke="#e8590c" stroke-width="1.5"/>
+      <text x="200" y="11.5" font-size="12" font-weight="700" fill="#e8590c">Frontier LLM</text>
+    </g>
+
+    <!-- Row 1: Parameters -->
+    <g transform="translate(0 68)">
+      <text x="150" y="18" text-anchor="end" font-size="12.5" font-weight="600" fill="#868e96">Parameters</text>
+      <rect x="165" y="2" width="76" height="20" rx="4" fill="#2f9e44" fill-opacity="0.18" stroke="#2f9e44" stroke-width="1.4"/>
+      <text x="249" y="16" font-size="11.5" font-weight="600" fill="#2f9e44">15M – 30M</text>
+
+      <rect x="165" y="26" width="380" height="20" rx="4" fill="#e8590c" fill-opacity="0.15" stroke="#e8590c" stroke-width="1.4"/>
+      <text x="553" y="40" font-size="11.5" font-weight="600" fill="#e8590c">10B – 100B+</text>
+    </g>
+
+    <!-- Row 2: Weight Storage -->
+    <g transform="translate(0 128)">
+      <text x="150" y="18" text-anchor="end" font-size="12.5" font-weight="600" fill="#868e96">Weights (16-bit)</text>
+      <rect x="165" y="2" width="68" height="20" rx="4" fill="#2f9e44" fill-opacity="0.18" stroke="#2f9e44" stroke-width="1.4"/>
+      <text x="241" y="16" font-size="11.5" font-weight="600" fill="#2f9e44">~30 – 60 MB (fits in RAM/cache)</text>
+
+      <rect x="165" y="26" width="365" height="20" rx="4" fill="#e8590c" fill-opacity="0.15" stroke="#e8590c" stroke-width="1.4"/>
+      <text x="538" y="40" font-size="11.5" font-weight="600" fill="#e8590c">20 – 200+ GB VRAM</text>
+    </g>
+
+    <!-- Row 3: Hardware Setup -->
+    <g transform="translate(0 188)">
+      <text x="150" y="18" text-anchor="end" font-size="12.5" font-weight="600" fill="#868e96">Training setup</text>
+      <rect x="165" y="2" width="105" height="20" rx="4" fill="#2f9e44" fill-opacity="0.18" stroke="#2f9e44" stroke-width="1.4"/>
+      <text x="278" y="16" font-size="11.5" font-weight="600" fill="#2f9e44">1 workstation / consumer GPU</text>
+
+      <rect x="165" y="26" width="350" height="20" rx="4" fill="#e8590c" fill-opacity="0.15" stroke="#e8590c" stroke-width="1.4"/>
+      <text x="523" y="40" font-size="11.5" font-weight="600" fill="#e8590c">Multi-GPU / data-center cluster</text>
+    </g>
+
+    <!-- Row 4: Experiment Cycle -->
+    <g transform="translate(0 248)">
+      <text x="150" y="18" text-anchor="end" font-size="12.5" font-weight="600" fill="#868e96">Iteration cycle</text>
+      <rect x="165" y="2" width="90" height="20" rx="4" fill="#2f9e44" fill-opacity="0.18" stroke="#2f9e44" stroke-width="1.4"/>
+      <text x="263" y="16" font-size="11.5" font-weight="600" fill="#2f9e44">Hours (rapid ablation &amp; debugging)</text>
+
+      <rect x="165" y="26" width="335" height="20" rx="4" fill="#e8590c" fill-opacity="0.15" stroke="#e8590c" stroke-width="1.4"/>
+      <text x="508" y="40" font-size="11.5" font-weight="600" fill="#e8590c">Weeks to months</text>
+    </g>
+  </g>
+</svg>
