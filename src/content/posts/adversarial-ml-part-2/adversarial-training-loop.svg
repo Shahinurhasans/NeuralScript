@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 250" width="680" height="250" role="img" aria-labelledby="t d">
+  <title id="t">The adversarial training loop</title>
+  <desc id="d">Four boxes connected by arrows in a loop. Step 1: take a batch of training images. Step 2: the attacker, FGSM or PGD, creates the hardest version of each image within the allowed change epsilon. Step 3: the model is trained to give the correct answer on these hard images. Step 4: the model becomes harder to fool, so the attacker has to work harder next time. An arrow returns from step 4 to step 1.</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#868e96"/>
+    </marker>
+    <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#c92a2a"/>
+    </marker>
+  </defs>
+  <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+    <!-- step boxes -->
+    <rect x="10" y="40" width="145" height="120" rx="8" fill="#4c7bd9" fill-opacity="0.12" stroke="#4c7bd9" stroke-width="1.5"/>
+    <rect x="182" y="40" width="145" height="120" rx="8" fill="#c92a2a" fill-opacity="0.10" stroke="#c92a2a" stroke-width="1.5"/>
+    <rect x="354" y="40" width="145" height="120" rx="8" fill="#2f9e44" fill-opacity="0.12" stroke="#2f9e44" stroke-width="1.5"/>
+    <rect x="526" y="40" width="145" height="120" rx="8" fill="#7048e8" fill-opacity="0.12" stroke="#7048e8" stroke-width="1.5"/>
+
+    <g font-size="13" font-weight="700" text-anchor="middle">
+      <text x="82" y="64" fill="#4c7bd9">1. Take a batch</text>
+      <text x="254" y="64" fill="#c92a2a">2. Attack it</text>
+      <text x="426" y="64" fill="#2f9e44">3. Learn from it</text>
+      <text x="598" y="64" fill="#7048e8">4. Repeat</text>
+    </g>
+    <g font-size="11.5" fill="#868e96" text-anchor="middle">
+      <text x="82" y="92">Pick 128 normal</text>
+      <text x="82" y="108">training images</text>
+      <text x="82" y="124">with their correct</text>
+      <text x="82" y="140">labels</text>
+
+      <text x="254" y="92">FGSM or PGD makes</text>
+      <text x="254" y="108">the hardest version</text>
+      <text x="254" y="124">of each image (every</text>
+      <text x="254" y="140">pixel changes ≤ ε)</text>
+
+      <text x="426" y="92">Update the model so</text>
+      <text x="426" y="108">it gives the correct</text>
+      <text x="426" y="124">label on these hard</text>
+      <text x="426" y="140">images</text>
+
+      <text x="598" y="92">The model is now</text>
+      <text x="598" y="108">harder to fool, so</text>
+      <text x="598" y="124">next round the attacker</text>
+      <text x="598" y="140">must push harder</text>
+    </g>
+
+    <!-- forward arrows -->
+    <g stroke="#868e96" stroke-width="2" fill="none" marker-end="url(#ahr)">
+      <line x1="157" y1="100" x2="179" y2="100" stroke="#c92a2a"/>
+    </g>
+    <g stroke="#868e96" stroke-width="2" fill="none" marker-end="url(#ah)">
+      <line x1="329" y1="100" x2="351" y2="100"/>
+      <line x1="501" y1="100" x2="523" y2="100"/>
+      <!-- loop back -->
+      <path d="M598 162 V200 H82 V164"/>
+    </g>
+    <text x="340" y="218" text-anchor="middle" font-size="12" fill="#868e96">repeat for every batch, every epoch</text>
+
+    <!-- vaccine note -->
+    <text x="340" y="24" text-anchor="middle" font-size="13" font-weight="600" fill="#868e96">Like a vaccine: show the model a controlled dose of the attack during training</text>
+    <text x="340" y="242" text-anchor="middle" font-size="11.5" fill="#c92a2a">Cost: step 2 runs an attack for every batch, so training is several times slower</text>
+  </g>
+</svg>

@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 300" width="680" height="300" role="img" aria-labelledby="t d">
+  <title id="t">Five families of defenses against adversarial attacks</title>
+  <desc id="d">A tree diagram. The root box reads "How do we make a model robust?". Five branches lead to: 1, train it on attacks (adversarial training); 2, clean the input (input transformation and purification); 3, catch the attack (detection); 4, prove it (certified defenses); 5, make the model smoother (regularization, architecture and data).</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#868e96"/>
+    </marker>
+  </defs>
+  <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+    <!-- root -->
+    <rect x="215" y="10" width="250" height="40" rx="8" fill="#868e96" fill-opacity="0.12" stroke="#868e96" stroke-width="1.5"/>
+    <text x="340" y="35" text-anchor="middle" font-size="14" font-weight="700" fill="#868e96">How do we make a model robust?</text>
+
+    <!-- connectors -->
+    <g stroke="#868e96" stroke-width="1.5" fill="none" marker-end="url(#ah)">
+      <path d="M340 50 V64 H72 V84"/>
+      <path d="M340 64 H206 V84"/>
+      <path d="M340 50 V84"/>
+      <path d="M340 64 H474 V84"/>
+      <path d="M340 64 H608 V84"/>
+    </g>
+
+    <!-- 1 adversarial training -->
+    <rect x="10" y="88" width="124" height="200" rx="8" fill="#4c7bd9" fill-opacity="0.12" stroke="#4c7bd9" stroke-width="1.5"/>
+    <text x="72" y="110" text-anchor="middle" font-size="13" font-weight="700" fill="#4c7bd9">1. Train it</text>
+    <text x="72" y="126" text-anchor="middle" font-size="13" font-weight="700" fill="#4c7bd9">on attacks</text>
+    <g font-size="11" fill="#868e96" text-anchor="middle">
+      <text x="72" y="150" font-style="italic">Adversarial training</text>
+      <text x="72" y="174">FGSM-AT</text>
+      <text x="72" y="192">PGD-AT</text>
+      <text x="72" y="210">Free / Fast AT</text>
+      <text x="72" y="228">TRADES, MART</text>
+      <text x="72" y="246">AWP</text>
+      <text x="72" y="264">Extra / synthetic data</text>
+    </g>
+
+    <!-- 2 input purification -->
+    <rect x="144" y="88" width="124" height="200" rx="8" fill="#2f9e44" fill-opacity="0.12" stroke="#2f9e44" stroke-width="1.5"/>
+    <text x="206" y="110" text-anchor="middle" font-size="13" font-weight="700" fill="#2f9e44">2. Clean</text>
+    <text x="206" y="126" text-anchor="middle" font-size="13" font-weight="700" fill="#2f9e44">the input</text>
+    <g font-size="11" fill="#868e96" text-anchor="middle">
+      <text x="206" y="150" font-style="italic">Input purification</text>
+      <text x="206" y="174">JPEG compression</text>
+      <text x="206" y="192">Bit-depth reduction</text>
+      <text x="206" y="210">Random resizing</text>
+      <text x="206" y="228">Denoisers</text>
+      <text x="206" y="246">GAN / diffusion</text>
+      <text x="206" y="264">purifiers</text>
+    </g>
+
+    <!-- 3 detection -->
+    <rect x="278" y="88" width="124" height="200" rx="8" fill="#e8590c" fill-opacity="0.12" stroke="#e8590c" stroke-width="1.5"/>
+    <text x="340" y="110" text-anchor="middle" font-size="13" font-weight="700" fill="#e8590c">3. Catch</text>
+    <text x="340" y="126" text-anchor="middle" font-size="13" font-weight="700" fill="#e8590c">the attack</text>
+    <g font-size="11" fill="#868e96" text-anchor="middle">
+      <text x="340" y="150" font-style="italic">Detection</text>
+      <text x="340" y="174">Detector networks</text>
+      <text x="340" y="192">Feature squeezing</text>
+      <text x="340" y="210">(compare answers)</text>
+      <text x="340" y="228">Statistical tests</text>
+      <text x="340" y="246">Reject and refuse</text>
+      <text x="340" y="264">to answer</text>
+    </g>
+
+    <!-- 4 certified -->
+    <rect x="412" y="88" width="124" height="200" rx="8" fill="#7048e8" fill-opacity="0.12" stroke="#7048e8" stroke-width="1.5"/>
+    <text x="474" y="110" text-anchor="middle" font-size="13" font-weight="700" fill="#7048e8">4. Prove</text>
+    <text x="474" y="126" text-anchor="middle" font-size="13" font-weight="700" fill="#7048e8">it is safe</text>
+    <g font-size="11" fill="#868e96" text-anchor="middle">
+      <text x="474" y="150" font-style="italic">Certified defenses</text>
+      <text x="474" y="174">Randomized</text>
+      <text x="474" y="192">smoothing</text>
+      <text x="474" y="210">Interval bound</text>
+      <text x="474" y="228">propagation (IBP)</text>
+      <text x="474" y="246">Convex relaxation</text>
+      <text x="474" y="264">Lipschitz networks</text>
+    </g>
+
+    <!-- 5 smoother -->
+    <rect x="546" y="88" width="124" height="200" rx="8" fill="#c92a2a" fill-opacity="0.10" stroke="#c92a2a" stroke-width="1.5"/>
+    <text x="608" y="110" text-anchor="middle" font-size="13" font-weight="700" fill="#c92a2a">5. Make the</text>
+    <text x="608" y="126" text-anchor="middle" font-size="13" font-weight="700" fill="#c92a2a">model smoother</text>
+    <g font-size="11" fill="#868e96" text-anchor="middle">
+      <text x="608" y="150" font-style="italic">Regularization &amp; design</text>
+      <text x="608" y="174">Gradient penalty</text>
+      <text x="608" y="192">Lipschitz limits</text>
+      <text x="608" y="210">Bigger models</text>
+      <text x="608" y="228">Pre-training</text>
+      <text x="608" y="246">Data augmentation</text>
+      <text x="608" y="264">Ensembles</text>
+    </g>
+  </g>
+</svg>
