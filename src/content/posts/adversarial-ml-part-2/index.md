@@ -49,7 +49,7 @@ $$
 \min_{\theta}\; \mathbb{E}_{(x,\,y)} \Big[ \max_{\|\delta\|_\infty \le \epsilon} L\big(f_\theta(x + \delta),\, y\big) \Big]
 $$
 
-It looks scary, but it is just the loop in Figure 2. Let us read it piece by piece:
+It looks scary, but it is just the loop in Figure 2.
 
 | Symbol | Meaning in plain words |
 | :-- | :-- |
@@ -62,24 +62,24 @@ It looks scary, but it is just the loop in Figure 2. Let us read it piece by pie
 | $\min_{\theta}$ | **Our job:** choose weights so that even this worst change does as little damage as possible |
 | $\mathbb{E}$ | Take the average over all training images |
 
-In one sentence: **for every training image, find the worst possible attack, then train the model to be right even on that.** It is a game between two players, the attacker inside and the trainer outside. Normal training is the same formula with the $\max$ part removed.
+In one sentence: **for every training image, find the worst possible attack, then train the model to be right even on that.** 
 
-The inner $\max$ cannot be solved exactly, so we use an attack to get close to it. **Which attack we use is the main difference between the methods below.**
+**There are several adversarial training mechanism.Which attack we use is the main difference between them.**
 
 ### 4.3 FGSM adversarial training (2015)
 
 The first version came from the same paper that introduced FGSM [1]. For each batch, it makes FGSM versions of the images and trains on a 50/50 mix of clean and attacked images.
 
 - **Good:** cheap. FGSM needs only one extra gradient computation, so training costs about twice as much as normal.
-- **Bad:** the model learns to beat **FGSM**, not attacks in general. A stronger attack like PGD can still break it. Worse, FGSM training can suffer from **catastrophic overfitting**: in the middle of training, robustness against PGD suddenly drops to almost zero, while robustness against FGSM looks perfect [3].
+- **Bad:** the model learns to beat FGSM, not attacks in general. A stronger attack like PGD can still break it. Worse, FGSM training can suffer from catastrophic overfitting: in the middle of training, robustness against PGD suddenly drops to almost zero, while robustness against FGSM looks perfect [3].
 
 Back to the student: if all the trick questions in practice tests are of one kind, the student gets very good at that one kind, and is still fooled by a new kind.
 
-### 4.4 PGD adversarial training (2018): the gold standard
+### 4.4 PGD adversarial training
 
-Madry et al. [2] used **PGD** for the inner $\max$, usually with 7 to 10 steps and a random starting point. Since PGD is a much stronger attack, the model is trained against much harder examples.
+Madry et al. [2] used this method in 2018 for the inner $\max$, usually with 7 to 10 steps and a random starting point. Since PGD is a much stronger attack, the model is trained against much harder examples.
 
-On CIFAR-10 (small 32 × 32 color photos of 10 classes such as airplanes, cats and trucks), a normally trained network reached 95.2% clean accuracy but was almost completely broken by PGD. Their PGD-trained network reached **87.3% clean accuracy and 45.8% accuracy under PGD** at ε = 8/255 [2]. Less than half sounds low, but before this, almost every defense dropped to near 0% against a strong attack.
+On CIFAR-10 (small 32 × 32 color photos of 10 classes such as airplanes, cats and trucks), a normally trained network reached 95.2% clean accuracy but was almost completely broken by PGD. Their PGD-trained network reached 87.3% clean accuracy and 45.8% accuracy under PGD at ε = 8/255 [2]. Less than half sounds low, but before this, almost every defense dropped to near 0% against a strong attack.
 
 PGD adversarial training is still the base of most of the strongest models on RobustBench, a public leaderboard of robust models [4].
 
@@ -91,13 +91,13 @@ PGD adversarial training is still the base of most of the strongest models on Ro
 Because PGD training is so slow, researchers looked for shortcuts:
 
 - **Free adversarial training** [5]: when the model computes gradients to update its weights, the gradient with respect to the input comes almost for free. Free AT reuses it to update the attack too, and replays each batch a few times. Robustness becomes close to PGD training at close to the cost of normal training.
-- **Fast adversarial training** [3]: go back to FGSM, but start from a **random point** inside the budget instead of the original image. This simple change makes FGSM training work much better, and a robust CIFAR-10 model can be trained in minutes instead of hours or days. The danger of catastrophic overfitting is still there, so you have to check PGD accuracy during training and stop early if it collapses.
+- **Fast adversarial training** [3]: go back to FGSM, but start from a random point inside the budget instead of the original image. This simple change makes FGSM training work much better, and a robust CIFAR-10 model can be trained in minutes instead of hours or days. The danger of catastrophic overfitting is still there, so you have to check PGD accuracy during training and stop early if it collapses.
 
 ### 4.6 Better training goals: TRADES, MART and AWP
 
 These methods keep the "train on attacks" idea but change **what the model is asked to learn**:
 
-- **TRADES** [6] splits the goal into two parts: (1) be correct on the clean image, and (2) give the **same answer** on the clean image and the attacked image. A knob called $\beta$ ("beta") decides how much to care about part (2). Small $\beta$: more accurate but more fragile. Large $\beta$: more robust but less accurate. TRADES turns the trade-off into a dial you can turn. On CIFAR-10 it reported 84.9% clean accuracy and 56.6% robust accuracy at ε = 8/255 [6].
+- **TRADES** [6] splits the goal into two parts: (1) be correct on the clean image, and (2) give the same output on the clean image and the attacked image. A knob called $\beta$ ("beta") decides how much to care about part (2). Small $\beta$: more accurate but more fragile. Large $\beta$: more robust but less accurate. TRADES turns the trade-off into a dial you can turn. On CIFAR-10 it reported 84.9% clean accuracy and 56.6% robust accuracy at ε = 8/255 [6].
 - **MART** [7] pays extra attention to the training images the model already gets wrong, because those are the weakest points in its defense.
 - **AWP** (adversarial weight perturbation) [8] attacks not only the input but also, slightly, the model's weights during training. This gives a "flatter" model that generalizes its robustness better to new images.
 
