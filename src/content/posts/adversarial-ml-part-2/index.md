@@ -1,7 +1,7 @@
 ---
 title: 'How Can We Make a ML or DL Model Robust Against Adversarial Attacks?'
 description: 'Part 2 of a series on adversarial machine learning (AML): every major way to defend a model against adversarial attacks, from adversarial training to certified defenses'
-date: 2026-11-23
+date: 2026-11-24
 tags: [adversarial-ml, deep-learning, ml-security]
 draft: false
 ---
@@ -10,7 +10,7 @@ In the [first blog](/posts/adversarial-ml-part-1/), I tried to explain that a mo
 
 Today in this Blog i would like to have a little discussion about how can we make our model robust against adversarial attacks.
 
-**Well There are Several ways to make a Model Adversaraially Robust . I will go through one by one . But before that let's have clear understanding about What does robustness actually stands for.**
+>**Well There are Several ways to make a Model Adversaraially Robust . I will go through one by one . But before that let's have clear understanding about What does robustness actually stands for.**
 
 
 Robustness means a model keeps giving the right answer even when someone deliberately tweaks the input to fool it, as long as the tweak stays within an agreed limit.A model is said adversaraially robust if no allowed change can flip its answer.
@@ -65,7 +65,7 @@ It looks scary, but it is just the loop in Figure 2.
 | $\min_{\theta}$ | **Our job:** choose weights so that even this worst change does as little damage as possible |
 | $\mathbb{E}$ | Take the average over all training images |
 
-In one sentence: for every training image, find the worst possible attack, then train the model to be right even on that.*
+**In one sentence: for every training image, find the worst possible attack, then train the model to be right even on that.**
 
 There are several adversarial training mechanism.Now, which Mechanism suits better for our purpose? Let's have a look at some of them.
 
@@ -89,12 +89,12 @@ PGD adversarial training is still the base of most of the strongest models on Ro
 - **Good:** reliable; it has survived years of attacks from many researchers.
 - **Bad:** slow. Every PGD step needs one extra forward and backward pass through the network, so 10 steps make training many times more expensive.
 
-### This adversaraial training makes the robust but another problem rises that is it is too slow for training.
+**This adversaraial training makes the robust but another problem rises that is it is too slow for training.**
 
-  Researchers have tried to make it faster and also introduced better training goals. Let's look at some of them:
+Researchers have tried to make it faster and also introduced better training goals. Let's look at some of them:
 
-**Free adversarial training** [5]: when the model computes gradients to update its weights, the gradient with respect to the input comes almost for free. Free AT reuses it to update the attack too, and replays each batch a few times. Robustness becomes close to PGD training at close to the cost of normal training.
-**Fast adversarial training** [3]: go back to FGSM, but start from a random point inside the budget instead of the original image. This simple change makes FGSM training work much better, and a robust CIFAR-10 model can be trained in minutes instead of hours or days. The danger of catastrophic overfitting is still there, so you have to check PGD accuracy during training and stop early if it collapses.
+- **Free adversarial training** [5]: when the model computes gradients to update its weights, the gradient with respect to the input comes almost for free. Free AT reuses it to update the attack too, and replays each batch a few times. Robustness becomes close to PGD training at close to the cost of normal training.
+- **Fast adversarial training** [3]: go back to FGSM, but start from a random point inside the budget instead of the original image. This simple change makes FGSM training work much better, and a robust CIFAR-10 model can be trained in minutes instead of hours or days. The danger of catastrophic overfitting is still there, so you have to check PGD accuracy during training and stop early if it collapses.
 
 ### Better training goals: TRADES, MART and AWP
 
@@ -103,36 +103,39 @@ Standard PGD training gives the model one simple rule: *"get the attacked image 
 Think of it like coaching a student for a tricky exam. Instead of only grading their final answer on trick questions, you can coach them in three smarter ways:
 
 #### 1. TRADES:
+
 TRADES splits the training goal into two clear parts:
+
 1. **Accuracy:** Get the clean (normal) image right.
 2. **Stability:** Give the same prediction on both the clean image and the attacked image.
 
 A single knob called $\beta$ ("beta") controls how much you care about part (2):
+
 - **Small $\beta$:** higher clean accuracy, but easier to fool.
 - **Large $\beta$:** stronger robustness, but slightly lower clean accuracy.
 
 In short, TRADES turns the robustness–accuracy trade-off into a simple dial. On CIFAR-10 at $\varepsilon = 8/255$, it reported 84.9% clean accuracy and 56.6% robust accuracy [6].
 
 #### 2. MART :[7]:
+
 Not all training images are equally easy. Some images are already misclassified even before an attack happens. MART (*Misclassification Aware Adversarial Training*) checks which clean images the model still gets wrong and puts extra weight on defending those weak spots-just like a student spending more study time on the chapters they keep failing.
 
 #### 3. AWP [8]
+
 Normal adversarial training only perturbs the input image $x$. AWP (*Adversarial Weight Perturbation*) goes one step further: during training, it also nudges the model's own weights slightly in the worst direction and trains the model to stay accurate anyway. This forces the model into a "flatter," steadier region so its robustness holds up better on unseen test images.
-
-
 
 > [!WARNING] A quick caution from this area
 > Another method called adversarial logit pairing [9] initially reported very strong robustness on ImageNet, but a stronger follow-up evaluation showed it was much weaker than claimed [10]. Always remember our rule from Section 1: *a defense is only as good as the strongest attack it has been tested against.*
 
-###  More data helps a lot
+### More data helps a lot
 
 Robust learning needs more data than normal learning [11]. Adding extra unlabeled images [12], and later millions of images generated by diffusion models [13], made a huge difference. In 2023, a model trained this way reached 70.69% robust accuracy on CIFAR-10 at ε = 8/255 under AutoAttack, a strong standard set of attacks [13]. Compare that with 45.8% in 2018.
 
-###  Ensemble adversarial training
+### Ensemble adversarial training
 
 In a transfer attack, the attacker cannot see our model, so they attack their own copy and hope the attack works on ours too. Ensemble adversarial training [14] trains the model on adversarial examples made on several other, already-trained models. This helps a lot against transfer attacks, but not against an attacker who can see our model.
 
-###  What adversarial training does to the model
+### What adversarial training does to the model
 
 Normal training only cares that each training image is on the correct side of the decision boundary. Adversarial training asks for more: the whole square of allowed changes around each image must be on the correct side. This pushes the boundary away from the images and leaves a safety margin.
 
@@ -144,18 +147,17 @@ The idea: adversarial noise is very finely tuned. If we "wash" the input before 
 
 Ways to clean the input:
 
-**Simple image processing:** JPEG compression, reducing the number of colors (bit-depth reduction), and other transformations [15].
-**Randomness:** randomly resize the image and add random padding before classifying it [16].
-**Denoiser networks:** a separate network trained to remove adversarial noise [17], [18].
-**Generative models:** project the input onto images that a GAN can draw [19], or add noise and let a diffusion model redraw a clean version [20].
+- **Simple image processing:** JPEG compression, reducing the number of colors (bit-depth reduction), and other transformations [15].
+- **Randomness:** randomly resize the image and add random padding before classifying it [16].
+- **Denoiser networks:** a separate network trained to remove adversarial noise [17], [18].
+- **Generative models:** project the input onto images that a GAN can draw [19], or add noise and let a diffusion model redraw a clean version [20].
 
 ![A pipeline: an adversarial image of the digit 7 with hidden noise goes into a cleaner (JPEG compression, bit-depth reduction, denoiser network, or GAN or diffusion model), which outputs a clean 7. The same model, not retrained, then says 7. A red box explains the weakness: if the attacker knows the cleaner is there, they attack cleaner plus model as one big model](./input-purification.svg "Figure 4. Input purification puts a cleaner in front of the model. Its weakness is the adaptive attack: an attacker who knows about the cleaner designs noise that survives it.")
 
 - **Good:** works in front of any model, with no retraining. Often costs little clean accuracy.
 - **Bad:** most simple cleaners were broken once the attacker attacked "cleaner + model" together [21]. If the cleaner is not differentiable, the attacker pretends it is the identity function when computing gradients (a trick called BPDA). If the cleaner is random, the attacker averages over many random versions (a trick called EOT). Diffusion-based purification holds up much better, but it is very slow and hard to evaluate correctly.
 
-
-##   M-03 : Detect the attack and refuse to answer
+## M-03 : Detect the attack and refuse to answer
 
 Instead of answering correctly, the model can just say "this input looks suspicious, I will not answer". It is like a shopkeeper checking a banknote under UV light before accepting it.
 
@@ -166,10 +168,11 @@ Instead of answering correctly, the model can just say "this input looks suspici
 - **Good:** useful as an alarm in a real system, for example to send suspicious inputs to a person.
 - **Bad:** an attacker who knows about the detector simply attacks the model and the detector at the same time. Carlini and Wagner bypassed ten different detection methods this way [24]. A detector alone is not a defense.
 
-##  M-04: Certified defenses 
+## M-04: Certified defenses
+
 All the methods so far are tested: "we tried strong attacks, and they failed". But tomorrow someone may invent a stronger attack. A certified defense gives a mathematical proof instead: **"for this input, no change smaller than R can change the answer."**
 
-###  Randomized smoothing
+### Randomized smoothing
 
 This is the most popular certified method [25], and it is surprisingly simple:
 
@@ -236,11 +239,11 @@ Can we take that exact same vulnerable model and make it robust against the FGSM
 2. **FGSM adversarial training gives a false sense of security:** On FGSM at $\varepsilon = 0.20$, `FGSM-AT` jumps from 0.5% to 84.4%. Yet against multi-step PGD at $\varepsilon = 0.20$, it collapses to 2.8% (catastrophic overfitting). Adding a random starting point in `Fast-AT` fixes this collapse and lifts PGD ($\varepsilon = 0.20$) accuracy from 2.8% to 38.7% (and 67.8% at $\varepsilon = 0.10$) in just 2.7s of training.
 3. **TRADES, MART, and PGD-AT give the strongest resistance against hard attacks:** Under the toughest attack ($\text{PGD at } \varepsilon = 0.20$), `TRADES` achieves the highest robust accuracy of all 14 models ( 59.9%, and 80.9% at $\varepsilon = 0.10$), followed by `MART` (49.9%), `PGD-AT` (47.1% ), and `Ensemble-AT` (43.5%, and 81.8% at $\varepsilon = 0.10$).
 4. **Input cleaning and detection help at moderate budgets without retraining the classifier:** `Input Cleaning` (bit-depth reduction + denoiser) keeps 97.7% clean accuracy and holds 64.9% / 40.0% under PGD at $\varepsilon = 0.10 / 0.20$. `Feature Squeezing` holds 64.8% under PGD at $\varepsilon = 0.10$ with zero training time (`0.0s`), but drops to 8.8% at $\varepsilon = 0.20$ where strong multi-step attacks overwhelm simple squeezing.
-5. **Certified and smoothness methods:** **`Randomized Smoothing`** lifts PGD ($\varepsilon = 0.10$) accuracy from 5.0% to 53.0% while keeping 97.1% clean accuracy, and `Lipschitz Spectral Norm` holds 68.5% / 38.4% under PGD at $\varepsilon = 0.10 / 0.20$.
+5. **Certified and smoothness methods:** `Randomized Smoothing` lifts PGD ($\varepsilon = 0.10$) accuracy from 5.0% to 53.0% while keeping 97.1% clean accuracy, and `Lipschitz Spectral Norm` holds 68.5% / 38.4% under PGD at $\varepsilon = 0.10 / 0.20$.
 6. **Robustness minimizes normal (clean) performance:** As Figure 7 clearly shows, forcing our small MLP to resist strong PGD attacks ($\varepsilon = 0.20$) reduces its accuracy on completely normal, unattacked images and increases training time up to $5.5\times$:
 
 | Model | Clean Accuracy (Normal Images) | Clean Accuracy Lost | Robust Accuracy (PGD $\varepsilon = 0.20$) | Training Time (NVIDIA L4) |
-| :-- | :--: | :--: | :--: | :--: |
+| :-- | :-- | :-- | :-- | :-- |
 | **Baseline (No Defense)** | **97.8%** | 0.0% | 0.0% | 2.1s |
 | **TRADES** | 91.7% | **−6.1%** | **59.9%** | 11.6s |
 | **PGD-AT** | 87.6% | **−10.2%** | 47.1% | 8.6s |
@@ -253,12 +256,9 @@ To survive strong attacks, our model sacrificed between 6.1 and 27.2 percentage 
 
 
 
-If you look at the result table or graphs, you will notice that all the robust models sacrifised some accuracy on normal inputs. What is the actual reason behind it?
-Also can we design and train a model that stays both highly accurate on normal data and robust under attack?
+>**If you look at the result table or graphs, you will notice that all the robust models sacrifised some accuracy on normal inputs. What is the actual reason behind it? Also can we design and train a model that stays both highly accurate on normal data and robust under attack?**
 
-In the next part i will try to figure out the solution of this questions. 
-
-
+In the next part i will try to figure out the solution of this questions.
 
 ## Code
 
