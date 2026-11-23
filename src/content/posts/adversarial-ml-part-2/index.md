@@ -1,84 +1,45 @@
 ---
 title: 'How Can We Make a ML or DL Model Robust Against Adversarial Attacks? And What Does It Cost?'
-description: 'Part 2 of a series on adversarial machine learning (AML): every major way to defend a model against adversarial attacks, from adversarial training to certified defenses, the defenses that failed, and the trade-off between robustness and accuracy, explained in simple words with a practical experiment.'
+description: 'Part 2 of a series on adversarial machine learning (AML): every major way to defend a model against adversarial attacks, from adversarial training to certified defenses, the defenses that failed, and the trade-off between robustness and accuracy.'
 date: 2026-11-17
 tags: [adversarial-ml, deep-learning, ml-security]
 draft: true
 ---
 
-Welcome back to the second blog of my adversarial machine learning series. In the [first blog](/posts/adversarial-ml-part-1/), we saw that a model can be fooled by a change so small that a person cannot even see it: a cat becomes a dog, a stop sign becomes a speed-limit sign, and a "35" becomes an "85".
+In the [first blog](/posts/adversarial-ml-part-1/), I tried to explain that a model can be fooled by a very little change which is not even visible to  human eye But that little change can make a huge difference even a cat becomes a dog, a stop sign becomes a speed-limit sign, and a "35" becomes an "85".
 
-At the end of that blog, I left three questions. This blog answers the third one:
+Today in this Blog i would like to have a little discussion about how can we make our model robust against adversarial attacks and what it costs in terms of accuracy and other metrics.
 
-**How can we make our model robust against adversarial attacks?**
+## Well There are Several ways to make a Model Robust . I will go through one by one . But before that let's have clear understanding about What does robustness actually stands for.
 
-Nothing is free, so we will also answer the question that comes right after it:
+Robustness means a model keeps giving the right answer even when someone deliberately tweaks the input to fool it, as long as the tweak stays within an agreed limit.A model is robust on an input if no allowed change can flip its answer.For Example: A digit classifier says "7". Robustness means that however an attacker tweaks the pixels (within the limit), it still says "7".
 
-**What do we lose when we make a model robust?**
 
-As before, I will keep the language simple. In the first blog I promised some mathematics, so there is a little bit here. Every symbol is explained in plain words, and you can skip the math part without losing the story.
+Another concept that needs to be clear while we talk about robustness is that "Robustness is always **against what**?" A company that makes safes never says "this safe cannot be opened". It says something like "this safe resists 30 minutes of drilling by a professional with these tools". For a model, we have to say the same kind of thing. This description is called the **threat model**:
 
-## 1. A quick recap of Part 1
+**Threat Model:** A threat model for an ML model is a formal description of the attacks it is expected to resist. It specifies three things:
 
-You only need to remember three things from the first blog:
+1.  **What the adversary can do**: For example, modify pixels, replace the input, or poison the training data.
+2.  **What the adversary knows**: For example, model architecture and parameters, or only inputs and outputs.
+3.  **What the adversary wants**: For example, cause a single misclassification, a specific misclassification, or access the model’s parameters.
 
-- **Adversarial example:** a normal input plus a small, deliberately chosen change that makes the model give a wrong answer.
-- **Budget (ε, "epsilon"):** the largest change we allow for each pixel. Pixel values go from 0 (black) to 1 (white), so ε = 0.1 means every pixel may go up or down by at most 0.1.
-- **FGSM and PGD:** two ways to compute the change. FGSM takes **one big step** in the direction that hurts the model the most [1]. PGD takes **many small steps** and checks the direction again after every step [2].
+So to Summerize,Robustness = the model's answer doesn't change under any allowed, deliberate perturbation, and it's only meaningful once you say which perturbations, how big, and against which attacker.
 
-### 1.1 First, question 1 from Part 1: why does PGD hurt more than FGSM?
-
-Think of the attacker as a person on a foggy hill who wants to reach the **highest** point, where the model is most wrong. The fog means they can only see the slope right under their feet.
-
-- **FGSM** looks at the slope once and jumps as far as it is allowed in that direction. If the hill curves, the jump lands in the wrong place.
-- **PGD** takes a small step, looks at the slope again, takes another small step, and so on. It follows the curves of the hill, so it reaches a higher point.
-
-That is why, in the experiment of Part 1, the CNN still had 33.2% accuracy under FGSM at ε = 0.2, but only 5.1% under PGD.
-
-This also matters for defense. Keep this sentence in mind, because we will come back to it many times:
-
-> [!IMPORTANT] Key idea
-> A defense is only as good as the strongest attack it has been tested against.
-
-## 2. What does "robust" actually mean?
-
-A model is **robust** on an input if **no** change inside the budget can change its answer. Not "random changes", not "the changes we tried", but **no** change.
-
-In practice, we measure **robust accuracy**: the percentage of test inputs that the model gets right **and** keeps right under the strongest attack we can find inside the budget. Normal accuracy on unchanged inputs is called **clean accuracy**.
-
-Robustness is always "robust **against what**?" A company that makes safes never says "this safe cannot be opened". It says something like "this safe resists 30 minutes of drilling by a professional with these tools". For a model, we have to say the same kind of thing. This description is called the **threat model**:
-
-| Question | Example answers |
-| :-- | :-- |
-| **What kind of change?** | A small change to every pixel; a small total change; a sticker or patch; a rotation; a change in brightness |
-| **How big?** | ε = 0.2 or 0.3 for MNIST digits; ε = 8/255 (about 0.03) for CIFAR-10 photos |
-| **What does the attacker know?** | Everything, including the model's weights (white-box); only the model's answers (black-box); nothing, so they attack their own copy and hope it transfers (transfer attack) |
-| **When does the attack happen?** | At test time, by changing the input (evasion, the focus of this blog); at training time, by changing the training data (poisoning, like Microsoft's Tay in Part 1) |
-
-> [!NOTE] Two ways to measure "small"
-> **L∞ ("L-infinity"):** no single pixel may change by more than ε. This is what we used in Part 1 and what we use in this blog. **L2:** the total change, measured like a distance, must be at most ε. Under L2, a few pixels may change a lot as long as most stay the same.
-
-## 3. The big picture: five families of defenses
-
-There are many defense methods, but almost all of them belong to one of five families. Think of them as five different answers to the question "where do we stop the attack?"
-
-![A tree diagram with the root "How do we make a model robust?" and five branches: 1. train it on attacks (adversarial training: FGSM-AT, PGD-AT, Free and Fast AT, TRADES, MART, AWP, extra data); 2. clean the input (JPEG compression, bit-depth reduction, random resizing, denoisers, GAN and diffusion purifiers); 3. catch the attack (detector networks, feature squeezing, statistical tests, refusing to answer); 4. prove it is safe (randomized smoothing, interval bound propagation, convex relaxation, Lipschitz networks); 5. make the model smoother (gradient penalty, Lipschitz limits, bigger models, pre-training, data augmentation, ensembles)](./defense-map.svg "Figure 1. The five families of defenses covered in this blog. A sixth layer of protection, the system around the model, is covered in Section 9.")
-
-We will go through them one by one, then look at the defenses that **failed**, and then at the **cost** of robustness.
+Now let's talk about the defence mechanisms:
 
 ## 4. Method 1: Adversarial training (train the model on attacks)
 
-This is the most important method in this blog. After more than ten years of research, it is still the most reliable way to make a model robust.
+This is the most important method and widely used method in AML. After more than ten years of research, it is still the most reliable way to make a model robust.
 
 ### 4.1 The idea
 
-Remember the student from Part 1? They had memorized patterns, so when one word in a question changed ("absorb" became "release"), they still picked the old answer.
+If you can recall from previous blog , we had a student who had memorized patterns, so when one word in a question changed ("absorb" became "release"), they still picked the old answer.
 
-How would a good teacher fix this student? By giving them **practice tests full of trick questions**. Every time the student falls for a trick, the teacher shows the correct answer. After enough practice, the student learns to read every word carefully instead of jumping at familiar words.
+How would a good teacher fix this student? By giving them practice tests full of trick questions. Every time the student falls for a trick, the teacher shows the correct answer. After enough practice, the student learns to read every word carefully instead of jumping at familiar words.
 
-Adversarial training does exactly this. During training, **we attack our own model**, and then teach it the correct answer for the attacked inputs. You can also think of it as a vaccine: the model is shown a controlled dose of the attack, so it builds immunity.
+Adversarial training does exactly this. During training, we attack our own model, and then teach it the correct answer for the attacked inputs.
 
-![Four boxes in a loop: 1. take a batch of 128 training images; 2. FGSM or PGD makes the hardest version of each image, with every pixel changing by at most epsilon; 3. update the model so it gives the correct label on these hard images; 4. the model is harder to fool, so next round the attacker must push harder. An arrow goes back to step 1.](./adversarial-training-loop.svg "Figure 2. The adversarial training loop. In normal training, step 2 does not exist: the model only ever sees the clean images.")
+![Four boxes in a loop: 1. take a batch of 128 training images; 2. FGSM or PGD makes the hardest version of each image, with every pixel changing by at most epsilon; 3. update the model so it gives the correct label on these hard images; 4. the model is harder to fool, so next round the attacker must push harder. An arrow goes back to step 1.](./adversarial-training-loop.svg "Figure 2. The adversarial training loop.")
 
 ### 4.2 The math in one line (you can skip this)
 
