@@ -19,7 +19,7 @@ interface Props {
 }
 
 const { post, headings, newer, older } = Astro.props;
-const { title, description, date, updated, tags, draft } = post.data;
+const { title, description, date, updated, tags, draft, image } = post.data;
 const permalink = new URL(postUrl(post), Astro.site).href;
 const toc = headings.filter((heading) => heading.depth <= 3 && heading.slug !== 'footnote-label');
 
@@ -36,7 +36,7 @@ const jsonLd = {
 };
 ---
 
-<BaseLayout title={title} description={description} type="article" published={date} modified={updated} jsonLd={jsonLd}>
+<BaseLayout title={title} description={description} type="article" published={date} modified={updated} image={image?.src} jsonLd={jsonLd}>
   <article>
     <header class="post-header">
       {draft && <p class="draft-note">Draft: visible only on your computer</p>}

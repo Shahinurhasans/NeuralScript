@@ -3,6 +3,7 @@ title: 'How Can We Make a ML or DL Model Robust Against Adversarial Attacks?'
 description: 'Part 2 of a series on adversarial machine learning (AML): every major way to defend a model against adversarial attacks, from adversarial training to certified defenses'
 date: 2026-11-24
 tags: [adversarial-ml, deep-learning, ml-security]
+image: ./all-methods-comparison.png
 draft: false
 ---
 

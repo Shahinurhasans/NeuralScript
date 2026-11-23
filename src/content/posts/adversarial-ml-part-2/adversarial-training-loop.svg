@@ -56,8 +56,6 @@
     </g>
     <text x="340" y="218" text-anchor="middle" font-size="12" fill="#868e96">repeat for every batch, every epoch</text>
 
-    <!-- vaccine note -->
-    <text x="340" y="24" text-anchor="middle" font-size="13" font-weight="600" fill="#868e96">Like a vaccine: show the model a controlled dose of the attack during training</text>
     <text x="340" y="242" text-anchor="middle" font-size="11.5" fill="#c92a2a">Cost: step 2 runs an attack for every batch, so training is several times slower</text>
   </g>
 </svg>
